@@ -1,28 +1,38 @@
-const CACHE = "mcdu-checklists-v1";
-const ASSETS = [
-    "./",
-    "index.html",
-    "manifest.json",
-    "icon-192.png",
-    "icon-512.png"
+const CACHE = "mcdu-cache-v2";
+const FILES = [
+    "/",
+    "/index.html",
+    "/manifest.json",
+    "/icon-192.png",
+    "/icon-512.png",
+    "/sw.js"
 ];
 
-self.addEventListener("install", e => {
+self.addEventListener("install", (e) => {
     e.waitUntil(
-        caches.open(CACHE).then(cache => cache.addAll(ASSETS))
+        caches.open(CACHE).then(cache => {
+            return cache.addAll(FILES);
+        })
     );
 });
 
-self.addEventListener("activate", e => {
+self.addEventListener("activate", (e) => {
     e.waitUntil(
-        caches.keys().then(keys =>
-            Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-        )
+        caches.keys().then(keys => {
+            return Promise.all(
+                keys.map(k => {
+                    if (k !== CACHE) return caches.delete(k);
+                })
+            );
+        })
     );
 });
 
-self.addEventListener("fetch", e => {
+self.addEventListener("fetch", (e) => {
     e.respondWith(
-        caches.match(e.request).then(r => r || fetch(e.request))
+        caches.match(e.request).then(cached => {
+            return cached || fetch(e.request).catch(() => cached);
+        })
     );
 });
+
